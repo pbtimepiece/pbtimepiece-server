@@ -1,0 +1,29 @@
+{
+  "name": "pbtimepiece-server",
+  "version": "1.0.0",
+  "description": "Cloud backend server for PBTimePiece business hub",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "keywords": [
+    "luxury",
+    "watches",
+    "inventory",
+    "business"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "sqlite3": "^5.1.6"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "engines": {
+    "node": "18.x"
+  }
+}
