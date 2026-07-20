@@ -15,6 +15,10 @@ app.use((req, res, next) => {
   }
 });
 
+// Persistent storage
+const DATA_DIR = '/app/data';
+const DATA_FILE = path.join(DATA_DIR, 'appdata.json');
+
 // In-memory storage
 let appData = {
   components: [],
@@ -24,7 +28,55 @@ let appData = {
   customOrders: []
 };
 
+// Ensure the data directory exists
+function ensureDataDir() {
+  try {
+    if (!fs.existsSync(DATA_DIR)) {
+      fs.mkdirSync(DATA_DIR, { recursive: true });
+      console.log(`✅ Created data directory at ${DATA_DIR}`);
+    }
+  } catch (err) {
+    console.error('Error creating data directory:', err);
+  }
+}
+
+// Load data from disk on startup
+function loadData() {
+  try {
+    ensureDataDir();
+    if (fs.existsSync(DATA_FILE)) {
+      const raw = fs.readFileSync(DATA_FILE, 'utf8');
+      const loaded = JSON.parse(raw);
+      appData = {
+        components: loaded.components || [],
+        models: loaded.models || [],
+        buildLog: loaded.buildLog || [],
+        salesLog: loaded.salesLog || [],
+        customOrders: loaded.customOrders || []
+      };
+      console.log(`✅ Loaded persisted data from ${DATA_FILE}`);
+    } else {
+      console.log('⚠️  No persisted data file found, starting with empty data');
+    }
+  } catch (err) {
+    console.error('Error loading persisted data:', err);
+  }
+}
+
+// Save data to disk
+function saveData() {
+  try {
+    ensureDataDir();
+    fs.writeFileSync(DATA_FILE, JSON.stringify(appData, null, 2), 'utf8');
+  } catch (err) {
+    console.error('Error saving data:', err);
+  }
+}
+
 console.log('Starting PBTimePiece Server...');
+
+// Load persisted data before serving requests
+loadData();
 
 // Load HTML file if it exists, otherwise use fallback
 let appHTML = null;
@@ -70,6 +122,7 @@ app.post('/api/data', (req, res) => {
       salesLog: req.body.salesLog || [],
       customOrders: req.body.customOrders || []
     };
+    saveData();
     console.log('POST /api/data - saved', appData.components.length, 'components');
     res.json({ success: true });
   } catch (err) {
@@ -93,6 +146,7 @@ app.post('/api/import', (req, res) => {
       customOrders: req.body.customOrders || []
     };
     
+    saveData();
     console.log('IMPORT - imported', appData.components.length, 'components and', appData.models.length, 'models');
     
     res.json({
