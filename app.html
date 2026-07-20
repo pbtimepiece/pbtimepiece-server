@@ -471,6 +471,23 @@ function renderModal(){
       if(state.modal.id){Object.assign(componentById(state.modal.id),updated);}else{state.components.push({id:uid('c'),...updated});}
       persist();state.modal=null;render();
     });
+    // Auto-sync form changes back to state immediately
+    const syncCompToState=()=>{
+      if(!state.modal.id)return;
+      const comp=componentById(state.modal.id);
+      if(!comp)return;
+      comp.name=document.getElementById('m-name').value.trim();
+      comp.partNumber=document.getElementById('m-part').value.trim();
+      comp.category=document.getElementById('m-cat').value||'Other';
+      comp.price=parseFloat(document.getElementById('m-price').value)||0;
+      comp.currentStock=parseFloat(document.getElementById('m-current').value)||0;
+      comp.goalStock=parseFloat(document.getElementById('m-goal').value)||0;
+      comp.stockOnOrder=parseFloat(document.getElementById('m-onorder').value)||0;
+      comp.unit=document.getElementById('m-unit').value.trim()||'pc';
+      persist();
+    };
+    overlay.addEventListener('input',syncCompToState);
+    overlay.addEventListener('change',syncCompToState);
     addKeyboardShortcuts();
     return;
   }
@@ -1199,6 +1216,23 @@ function renderModal(){
       if(state.modal.id){Object.assign(componentById(state.modal.id),updated);}else{state.components.push({id:uid('c'),...updated});}
       persist();state.modal=null;render();
     });
+    // Auto-sync form changes back to state immediately
+    const syncCompToState=()=>{
+      if(!state.modal.id)return;
+      const comp=componentById(state.modal.id);
+      if(!comp)return;
+      comp.name=document.getElementById('m-name').value.trim();
+      comp.partNumber=document.getElementById('m-part').value.trim();
+      comp.category=document.getElementById('m-cat').value||'Other';
+      comp.price=parseFloat(document.getElementById('m-price').value)||0;
+      comp.currentStock=parseFloat(document.getElementById('m-current').value)||0;
+      comp.goalStock=parseFloat(document.getElementById('m-goal').value)||0;
+      comp.stockOnOrder=parseFloat(document.getElementById('m-onorder').value)||0;
+      comp.unit=document.getElementById('m-unit').value.trim()||'pc';
+      persist();
+    };
+    overlay.addEventListener('input',syncCompToState);
+    overlay.addEventListener('change',syncCompToState);
     addKeyboardShortcuts();
     return;
   }
