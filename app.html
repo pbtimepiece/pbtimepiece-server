@@ -715,6 +715,13 @@ function loadSampleData(){
   state.models=[{id:uid('m'),name:'Meridian 40',referenceNumber:'REF-MER40',collection:'Datejust',finishedStock:2,goalFinished:3,salePrice:2850,bom:[{componentId:crystal.id,qty:1},{componentId:casing.id,qty:1},{componentId:movement.id,qty:1},{componentId:dial.id,qty:1}]}];
   state.buildLog=[];state.salesLog=[];state.customOrders=[];persist();render();
 }
+// Auto-persist on all input changes
+document.addEventListener("change",(e)=>{
+  if(e.target.matches("input,select,textarea"))persist();
+});
+document.addEventListener("input",(e)=>{
+  if(e.target.matches("input[type=\"text\"],input[type=\"number\"],textarea"))scheduleS();
+});
 init();
 </script>
 </body>
@@ -1436,6 +1443,13 @@ function loadSampleData(){
   state.models=[{id:uid('m'),name:'Meridian 40',referenceNumber:'REF-MER40',collection:'Datejust',finishedStock:2,goalFinished:3,salePrice:2850,bom:[{componentId:crystal.id,qty:1},{componentId:casing.id,qty:1},{componentId:movement.id,qty:1},{componentId:dial.id,qty:1}]}];
   state.buildLog=[];state.salesLog=[];state.customOrders=[];persist();render();
 }
+// Auto-persist on all input changes
+document.addEventListener("change",(e)=>{
+  if(e.target.matches("input,select,textarea"))persist();
+});
+document.addEventListener("input",(e)=>{
+  if(e.target.matches("input[type=\"text\"],input[type=\"number\"],textarea"))scheduleS();
+});
 init();
 </script>
 </body>
