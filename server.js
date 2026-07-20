@@ -15,7 +15,16 @@ app.use((req, res, next) => {
   }
 });
 
-// In-memory storage
+// Persistent storage path
+const DATA_DIR = '/app/data';
+const DATA_FILE = path.join(DATA_DIR, 'appdata.json');
+
+// Ensure data directory exists
+if (!fs.existsSync(DATA_DIR)) {
+  fs.mkdirSync(DATA_DIR, { recursive: true });
+}
+
+// Load persisted data or initialize empty
 let appData = {
   components: [],
   models: [],
@@ -23,6 +32,27 @@ let appData = {
   salesLog: [],
   customOrders: []
 };
+
+// Load data from file if it exists
+if (fs.existsSync(DATA_FILE)) {
+  try {
+    const fileData = fs.readFileSync(DATA_FILE, 'utf8');
+    appData = JSON.parse(fileData);
+    console.log('✅ Loaded persisted data from file');
+  } catch (err) {
+    console.error('⚠️  Error loading data file:', err.message);
+  }
+}
+
+// Save data to file
+function saveData() {
+  try {
+    fs.writeFileSync(DATA_FILE, JSON.stringify(appData, null, 2));
+    console.log('💾 Data saved to persistent storage');
+  } catch (err) {
+    console.error('❌ Error saving data:', err.message);
+  }
+}
 
 console.log('Starting PBTimePiece Server...');
 
@@ -70,6 +100,7 @@ app.post('/api/data', (req, res) => {
       salesLog: req.body.salesLog || [],
       customOrders: req.body.customOrders || []
     };
+    saveData();
     console.log('POST /api/data - saved', appData.components.length, 'components');
     res.json({ success: true });
   } catch (err) {
@@ -92,6 +123,7 @@ app.post('/api/import', (req, res) => {
       salesLog: req.body.salesLog || [],
       customOrders: req.body.customOrders || []
     };
+    saveData();
     
     console.log('IMPORT - imported', appData.components.length, 'components and', appData.models.length, 'models');
     
@@ -117,7 +149,8 @@ app.get('/health', (req, res) => {
     status: 'ok',
     stored_data: {
       components: appData.components.length,
-      models: appData.models.length
+      models: appData.models.length,
+      customOrders: appData.customOrders.length
     }
   });
 });
@@ -127,4 +160,6 @@ app.listen(PORT, () => {
   console.log(`✅ PBTimePiece Server running on port ${PORT}`);
   console.log(`🌐 App: https://pbtimepiece-server-production.up.railway.app/`);
   console.log(`📡 API: /api/data, /api/import`);
+  console.log(`💾 Data location: ${DATA_FILE}`);
 });
+
