@@ -1,16 +1,99 @@
-{
-  "name": "pbtimepiece",
-  "version": "1.0.0",
-  "description": "PBTimePiece Business Hub - Luxury watch management and sales",
-  "main": "server.js",
-  "scripts": {
-    "start": "node server.js"
-  },
-  "dependencies": {
-    "express": "^4.18.2",
-    "pg": "^8.11.3"
-  },
-  "engines": {
-    "node": "18"
+const express = require('express');
+const { Pool } = require('pg');
+const path = require('path');
+
+const app = express();
+app.use(express.json({ limit: '10mb' }));
+app.use(express.static(path.dirname(__filename)));
+
+// Connect to PostgreSQL
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false }
+});
+
+pool.on('error', (err) => {
+  console.error('Unexpected error on idle client', err);
+});
+
+// Initialize database
+async function initDB() {
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS workshop_data (
+        id SERIAL PRIMARY KEY,
+        data JSONB NOT NULL,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    console.log('✓ Database initialized');
+  } catch (err) {
+    console.error('✗ Database init error:', err.message);
   }
 }
+
+// GET /api/data
+app.get('/api/data', async (req, res) => {
+  try {
+    const result = await pool.query(
+      'SELECT data FROM workshop_data ORDER BY id DESC LIMIT 1'
+    );
+    if (result.rows.length > 0) {
+      res.json(result.rows[0].data);
+    } else {
+      res.json({
+        components: [],
+        models: [],
+        buildLog: [],
+        salesLog: [],
+        customOrders: []
+      });
+    }
+  } catch (err) {
+    console.error('GET error:', err.message);
+    res.status(500).json({ error: 'Failed to load data' });
+  }
+});
+
+// POST /api/data
+app.post('/api/data', async (req, res) => {
+  try {
+    const { components, models, buildLog, salesLog, customOrders } = req.body;
+    const data = { components, models, buildLog, salesLog, customOrders };
+    
+    await pool.query(
+      'INSERT INTO workshop_data (data) VALUES ($1)',
+      [JSON.stringify(data)]
+    );
+    
+    console.log('✓ Saved:', components?.length || 0, 'components');
+    res.json({ success: true });
+  } catch (err) {
+    console.error('POST error:', err.message);
+    res.status(500).json({ error: 'Failed to save data' });
+  }
+});
+
+// Health check
+app.get('/api/health', async (req, res) => {
+  try {
+    await pool.query('SELECT 1');
+    res.json({ ok: true, database: 'connected' });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+// Serve app.html
+app.get('*', (req, res) => {
+  res.sendFile(path.join(path.dirname(__filename), 'app.html'));
+});
+
+const PORT = process.env.PORT || 3000;
+
+initDB().then(() => {
+  app.listen(PORT, () => {
+    console.log(`✓ Server running on port ${PORT}`);
+    console.log('✓ Connected to PostgreSQL\n');
+  });
+});
